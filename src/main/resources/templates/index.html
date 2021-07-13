@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+  	<title>Spring Boot + AngularJS + Twilio + IntlTelInput</title>
+    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+  	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.7/angular.js"></script>
+    
+    <script th:src="@{/main.js}"></script>
+  </head>
+  <body ng-app="SMSManagement" ng-controller="SMSController">
+  	<h3>
+  		Intl Tel Form
+  	</h3>
+  	<form ng-submit="submitSMS()">
+	  <div>
+	    <p>Enter your phone number: <input id="phone" type="tel" name="phone" ng-model="smsForm.phone" />
+	      <span id="alert-phone-error" class="hide"></span>
+          <span id="phoneSaved" class=""></span>
+	    </p>
+	      <input type="submit" value="Generate code" onclick="return validNumber();" />
+	  </div>
+  	</form>
+	<form ng-submit="validCode()">
+	  <div id="codeField">
+		<p>Enter your code: <input id="code" type="text" name="code" ng-model="smsForm.code" />
+      	  <span id="errmsg"></span>
+        </p>
+        <input type="submit" value="Verify" class="btn" />
+	  </div>
+	</form>
+  </body>
+  <script type="text/javascript">
+	  $(document).ready(function () {
+		  //called when key is pressed in textbox
+		  $("#code").keypress(function (e) {
+		     //if the letter is not digit then display error and don't type anything
+		     if (e.which != 8 && e.which != 0 && (e.which < 48 || e.which > 57)) {
+		        //display error message
+		        $("#errmsg").html("Digits Only").show().fadeOut("slow");
+		               return false;
+		    }
+		   });
+		});
+  </script>
+  <script>
+const phoneInputField = document.querySelector("#phone");
+const alertPhoneError = document.querySelector("#alert-phone-error");
+const phoneSaved = document.querySelector("#phoneSaved");
+
+const codeInputField = document.querySelector("#code");
+const codeField = document.querySelector("#codeField");
+
+const phoneInput = window.intlTelInput(phoneInputField, {
+  utilsScript:
+    "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+});
+
+const alertReset = function() {
+	phoneInputField.classList.remove("error");
+	alertPhoneError.innerHTML = "";
+	alertPhoneError.classList.add("hide");
+	
+	phoneSaved.className = "";
+};
+
+window.onload = function(){
+	codeField.style.display = 'none';
+}
+
+function validNumber() {
+  alertReset();
+  var phoneNumber = phoneInput.getNumber();
+  var errorMap = ["Invalid number", "Invalid country code", "Too short", "Too long"];
+  
+  if(phoneInputField.value.trim()) {
+	if(phoneInput.isValidNumber()) {
+      codeField.style.display = 'block';
+
+      phoneSaved.classList.add(phoneNumber);
+	} else {
+      codeField.style.display = 'none';
+
+      phoneSaved.className = "";
+
+	  phoneInputField.classList.add("error");
+	  var errorCode = phoneInput.getValidationError();
+	  alertPhoneError.innerHTML = errorMap[errorCode];
+	  alertPhoneError.classList.remove("hide");
+	}
+  }
+  
+  phoneInputField.addEventListener('change', alertReset);
+  phoneInputField.addEventListener('keyup', alertReset);
+}
+
+// No more than 6 digits
+codeInputField.addEventListener('input', function(){
+  if (this.value.length > 6) 
+     this.value = this.value.slice(0,6); 
+})
+  </script>
+</html>
